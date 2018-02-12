@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define NAME_SIZE 12 //max size a name can be
+#define NAME_SIZE 12 //max size a name can be ( 12 + null terminator)
 #define QUIT "quit"
 #define ADD "add"
 #define DELETE "delete"
@@ -29,7 +29,8 @@ int main() {
 	printf("Please enter your name: ");
 	root = malloc(sizeof(struct Node));
 	fgets(root->name, NAME_SIZE, stdin);
-	root->name[strlen(root->name) - 1] = '\0'; //remove newline that fgets captures
+	char *pos;
+	if ((pos = strchr(root->name, '\n')) != NULL) *pos = '\0'; // remove newline that fgets captures
 	consoleLoop();
 }
 
@@ -39,17 +40,11 @@ void consoleLoop() {
 		char command[NAME_SIZE];
 		fgets(command, NAME_SIZE, stdin);
 		
-		if (strncmp(command, QUIT, 4) == 0) {
-			quit(root);
-		} else if (strncmp(command, ADD, 3) == 0) {
-			add();
-		} else if (strncmp(command, DELETE, 6) == 0) {
-			deletePrompt();
-		} else if (strncmp(command, PRINT, 5) == 0) {
-			print(root, 0);
-		} else {
-			printf("Unrecognized command, try again\n");
-		}
+		if (strncmp(command, QUIT, 4) == 0) quit(root);
+		else if (strncmp(command, ADD, 3) == 0) add();
+		else if (strncmp(command, DELETE, 6) == 0) deletePrompt();
+		else if (strncmp(command, PRINT, 5) == 0) print(root, 0);
+		else printf("Unrecognized command, try again\n");
 	}
 }
 
@@ -57,7 +52,8 @@ void deletePrompt() {
 	printf("Please specify the name to delete: ");
 	char name[NAME_SIZE];
 	fgets(name, NAME_SIZE, stdin);
-	name[strlen(name) - 1] = '\0'; //trim newline
+	char *pos;
+	if ((pos = strchr(name, '\n')) != NULL) *pos = '\0'; // remove newline
 	struct Node *searchNode = search(root, name);
 	if (!searchNode) {
 		printf("Error, the node you are trying to delete does not exist!\n");
@@ -134,9 +130,7 @@ void add() {
 
 //TODO: the printing is still kind of ugly
 void print(struct Node *n, int depth) {
-        if (!n) {
-                return;
-        }
+        if (!n) return;
         int temp = depth;
         while (temp != 0) {
                 printf("\t");
@@ -151,17 +145,10 @@ void print(struct Node *n, int depth) {
 }
 
 struct Node* search(struct Node *n, char *name) {
-	if (!n) {
-		return NULL;
-	}
-	if (strncmp(n->name, name, strlen(name)) == 0) {
-		return n;
-	} else {
-		if (n->leftParent) {
-			return search(n->leftParent, name);
-		}
-		if (n->rightParent) {
-			return search(n->rightParent, name);
-		}
+	if (!n) return NULL;
+	if (strncmp(n->name, name, strlen(name)) == 0) return n;
+	else {
+		if (n->leftParent) return search(n->leftParent, name);
+		if (n->rightParent)return search(n->rightParent, name);		
 	}
 }
