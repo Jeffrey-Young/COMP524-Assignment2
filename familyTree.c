@@ -9,7 +9,7 @@
 #define PRINT "print"
 
 struct Node {
-	char name[NAME_SIZE];
+	char *name;
 	struct Node *leftParent; //father
 	struct Node *rightParent; //mother
 };
@@ -28,9 +28,12 @@ static struct Node *root = NULL;
 int main() {
 	printf("Please enter your name: ");
 	root = malloc(sizeof(struct Node));
-	fgets(root->name, NAME_SIZE, stdin);
+	char temp[NAME_SIZE];
+	fgets(temp, NAME_SIZE, stdin);
 	char *pos;
-	if ((pos = strchr(root->name, '\n')) != NULL) *pos = '\0'; // remove newline that fgets captures
+	if ((pos = strchr(temp, '\n')) != NULL) *pos = '\0'; // remove newline that fgets captures
+	root->name = realloc(root->name, sizeof(char) * strlen(temp));
+	strcpy(root->name, temp);
 	consoleLoop();
 }
 
@@ -60,13 +63,17 @@ void deletePrompt() {
 		return;
 	}
 	delete(searchNode);
+	return;
 }
 
 void delete(struct Node *n) {
 	if (!n) return;
 	delete(n->leftParent);
+	free(n->name);
 	delete(n->rightParent);
+// 	printf("about to free: %s", n->name);
 	free(n);
+	n = NULL;
 }
 
 void quit() {
@@ -77,10 +84,14 @@ void quit() {
 
 void add() {
 	printf("Please specify a relation to add: ");
-	char *input = malloc(sizeof(char) * 100);
+	char *input= malloc(sizeof(char) * 100);
+	// I lost 2 hours of my life figuring out that you have to maintain a ref to input because fgets does something stupid
+	char * const toFree = input;
         char *name2 = NULL;
 	fgets(input, 100, stdin);
-	if (strncmp(input, "father", 6) != 0 && strncmp(input, "mother", 6) != 0) {
+        char *pos;
+        if ((pos = strchr(input, '\n')) != NULL) *pos = '\0'; // remove newline
+	if (strlen(input) < 6 && strncmp(input, "father", 6) != 0 && strncmp(input, "mother", 6) != 0) {
 		printf("Unrecognized relation, try again\n");
 		goto cleanup;
 	}
@@ -88,11 +99,8 @@ void add() {
 	char *temp = strsep(&input, "(");
 	char *name1 = strsep(&temp, ",");
 	char *temp2 = strsep(&temp, ",");
-	name2 = malloc(strlen(temp2 - 1) * sizeof(char));
-	strncpy(name2, temp2, strlen(temp2) - 2);
-	printf("Relation: %s\n", relation);
-	printf("Name1: %s\n", name1);
-	printf("Name2: %s\n", name2);
+	name2 = malloc(strlen(temp2 - 1) * sizeof(char)); // minus 1 because we don't need space for the ")"
+	strncpy(name2, temp2, strlen(temp2) - 1);
 	struct Node *searchNode = search(root, name2);
 	if (!searchNode) {
 		printf("Error, child does not exist!\n");
@@ -104,6 +112,7 @@ void add() {
 			goto cleanup;
 		} else {
 			struct Node *parent = malloc(sizeof(struct Node));
+                        parent->name = realloc(parent->name, sizeof(char) * strlen(name1));
 			strcpy(parent->name, name1);
 			searchNode->leftParent = parent;
 			goto cleanup;
@@ -114,6 +123,7 @@ void add() {
                         goto cleanup;
                 } else {
                         struct Node *parent = malloc(sizeof(struct Node));
+			parent->name = realloc(parent->name, sizeof(char) * strlen(name1));			
                         strcpy(parent->name, name1);
                         searchNode->rightParent = parent;
                         goto cleanup;
@@ -122,8 +132,10 @@ void add() {
 	} 
 
 	cleanup:
-		free(input);
+		free(toFree);
 		free(name2);
+//		input = NULL;
+//		name2 = NULL;
 		return;
 
 }
@@ -149,6 +161,6 @@ struct Node* search(struct Node *n, char *name) {
 	if (strncmp(n->name, name, strlen(name)) == 0) return n;
 	else {
 		if (n->leftParent) return search(n->leftParent, name);
-		if (n->rightParent)return search(n->rightParent, name);		
+		if (n->rightParent) return search(n->rightParent, name);		
 	}
 }
