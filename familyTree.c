@@ -39,7 +39,7 @@ int main() {
 
 void consoleLoop() {
 	while(1) {
-		printf("Please specify whether to add or delete an entry, or print the tree: ");
+		printf("Please specify whether to add or delete an entry, or print the tree\n");
 		char command[NAME_SIZE];
 		fgets(command, NAME_SIZE, stdin);
 		
@@ -47,19 +47,19 @@ void consoleLoop() {
 		else if (strncmp(command, ADD, 3) == 0) add();
 		else if (strncmp(command, DELETE, 6) == 0) deletePrompt();
 		else if (strncmp(command, PRINT, 5) == 0) print(root, 0);
-		else printf("Unrecognized command, try again\n");
+		else printf("invalid command\n");
 	}
 }
 
 void deletePrompt() {
-	printf("Please specify the name to delete: ");
+	printf("Please specify the name to delete\n");
 	char name[NAME_SIZE];
 	fgets(name, NAME_SIZE, stdin);
 	char *pos;
 	if ((pos = strchr(name, '\n')) != NULL) *pos = '\0'; // remove newline
 	struct Node *searchNode = search(root, name);
 	if (!searchNode) {
-		printf("Error, the node you are trying to delete does not exist!\n");
+		printf("name not found, the node you are trying to delete does not exist!\n");
 		return;
 	}
 	delete(searchNode);
@@ -78,12 +78,12 @@ void delete(struct Node *n) {
 
 void quit() {
 	delete(root);
-	printf("Program Terminating");
+	printf("Program Terminating\n");
 	exit(0);
 }
 
 void add() {
-	printf("Please specify a relation to add: ");
+	printf("Please specify a relation to add\n");
 	char *input= malloc(sizeof(char) * 100);
 	// I lost 2 hours of my life figuring out that you have to maintain a ref to input because fgets does something stupid
 	char * const toFree = input;
@@ -92,7 +92,7 @@ void add() {
         char *pos;
         if ((pos = strchr(input, '\n')) != NULL) *pos = '\0'; // remove newline
 	if (strlen(input) < 6 && strncmp(input, "father", 6) != 0 && strncmp(input, "mother", 6) != 0) {
-		printf("Unrecognized relation, try again\n");
+		printf("invalid relationship, try again\n");
 		goto cleanup;
 	}
 	char *relation = strsep(&input, "(");
@@ -103,12 +103,12 @@ void add() {
 	strncpy(name2, temp2, strlen(temp2) - 1);
 	struct Node *searchNode = search(root, name2);
 	if (!searchNode) {
-		printf("Error, child does not exist!\n");
+		printf("name not found, child does not exist!\n");
 		goto cleanup;
 	}
 	if (strncmp(relation, "father", 6) == 0) {
 		if (searchNode->leftParent) {
-			printf("Error, father already exists!\n");
+			printf("relationship already exists, father already exists!\n");
 			goto cleanup;
 		} else {
 			struct Node *parent = malloc(sizeof(struct Node));
@@ -119,7 +119,7 @@ void add() {
 		}
 	} else { //has to be mother
                 if (searchNode->rightParent) {
-                        printf("Error, mother already exists!\n");
+                        printf("relationship already exists, mother already exists!\n");
                         goto cleanup;
                 } else {
                         struct Node *parent = malloc(sizeof(struct Node));
@@ -140,7 +140,6 @@ void add() {
 
 }
 
-//TODO: the printing is still kind of ugly
 void print(struct Node *n, int depth) {
         if (!n) return;
         int temp = depth;
@@ -150,9 +149,9 @@ void print(struct Node *n, int depth) {
         }
 
 	printf("%s", n->name);
+	printf("\n");
 
 	print(n->leftParent, depth + 1);
-	printf("\n");
 	print(n->rightParent, depth + 1);
 }
 
