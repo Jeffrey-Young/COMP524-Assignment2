@@ -2,16 +2,17 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define NAME_SIZE 12 //max size a name can be ( 12 + null terminator)
-#define QUIT "quit"
-#define ADD "add"
-#define DELETE "delete"
-#define PRINT "print"
+#define NAME_SIZE 14 //max size a name can be ( 14 + null terminator)
+#define QUIT "quit\n"
+#define ADD "add\n"
+#define DELETE "delete\n"
+#define PRINT "print\n"
 
 struct Node {
 	char *name;
 	struct Node *leftParent; //father
 	struct Node *rightParent; //mother
+	struct Node *child;//upper level node
 };
 
 void consoleLoop();
@@ -35,6 +36,7 @@ int main() {
 	root->name = realloc(root->name, sizeof(char) * strlen(temp));
 	strcpy(root->name, temp);
 	consoleLoop();
+	// TODO: free here?
 }
 
 void consoleLoop() {
@@ -43,10 +45,10 @@ void consoleLoop() {
 		char command[NAME_SIZE];
 		fgets(command, NAME_SIZE, stdin);
 		
-		if (strncmp(command, QUIT, 4) == 0) quit(root);
-		else if (strncmp(command, ADD, 3) == 0) add();
-		else if (strncmp(command, DELETE, 6) == 0) deletePrompt();
-		else if (strncmp(command, PRINT, 5) == 0) print(root, 0);
+		if (strcmp(command, QUIT) == 0) quit(root);
+		else if (strcmp(command, ADD) == 0) add();
+		else if (strcmp(command, DELETE) == 0) deletePrompt();
+		else if (strcmp(command, PRINT) == 0) print(root, 0);
 		else printf("invalid command\n");
 	}
 }
@@ -61,6 +63,11 @@ void deletePrompt() {
 	if (!searchNode) {
 		printf("name not found, the node you are trying to delete does not exist!\n");
 		return;
+	}
+	if ((searchNode->child)->leftParent == searchNode) {
+		(searchNode->child)->leftParent = NULL;
+	} else {
+		(searchNode->child)->rightParent = NULL;
 	}
 	delete(searchNode);
 	return;
@@ -115,6 +122,7 @@ void add() {
                         parent->name = realloc(parent->name, sizeof(char) * strlen(name1));
 			strcpy(parent->name, name1);
 			searchNode->leftParent = parent;
+			parent->child = searchNode;
 			goto cleanup;
 		}
 	} else { //has to be mother
@@ -126,6 +134,7 @@ void add() {
 			parent->name = realloc(parent->name, sizeof(char) * strlen(name1));			
                         strcpy(parent->name, name1);
                         searchNode->rightParent = parent;
+			parent->child = searchNode;
                         goto cleanup;
                 }
 
@@ -157,9 +166,17 @@ void print(struct Node *n, int depth) {
 
 struct Node* search(struct Node *n, char *name) {
 	if (!n) return NULL;
-	if (strncmp(n->name, name, strlen(name)) == 0) return n;
+	if (strcmp(n->name, name) == 0) return n;
 	else {
-		if (n->leftParent) return search(n->leftParent, name);
-		if (n->rightParent) return search(n->rightParent, name);		
+		if (n->leftParent) {
+			struct Node* tmp = search(n->leftParent, name);
+			if (tmp) {
+				return tmp;
+			}
+		}
+		if (n->rightParent) {
+			return search(n->rightParent, name);
+		}
+		return NULL;
 	}
 }
