@@ -98,7 +98,7 @@ void add() {
 	fgets(input, 100, stdin);
         char *pos;
         if ((pos = strchr(input, '\n')) != NULL) *pos = '\0'; // remove newline
-	if (strlen(input) < 6 && strncmp(input, "father", 6) != 0 && strncmp(input, "mother", 6) != 0) {
+	if (strlen(input) < 6 || (strncmp(input, "father", 6) != 0 && strncmp(input, "mother", 6) != 0) || strchr(input, ')') == NULL || strchr(input, ',') == NULL) {
 		printf("invalid relationship, try again\n");
 		goto cleanup;
 	}
@@ -170,9 +170,7 @@ struct Node* search(struct Node *n, char *name) {
 	else {
 		if (n->leftParent) {
 			struct Node* tmp = search(n->leftParent, name);
-			if (tmp) {
-				return tmp;
-			}
+			if (tmp) return tmp;
 		}
 		if (n->rightParent) {
 			return search(n->rightParent, name);
