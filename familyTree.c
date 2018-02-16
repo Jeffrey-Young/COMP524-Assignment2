@@ -98,7 +98,7 @@ void add() {
 	fgets(input, 100, stdin);
         char *pos;
         if ((pos = strchr(input, '\n')) != NULL) *pos = '\0'; // remove newline
-	if (strlen(input) < 6 || (strncmp(input, "father", 6) != 0 && strncmp(input, "mother", 6) != 0) || strchr(input, ')') == NULL || strchr(input, ',') == NULL) {
+	if (strlen(input) < 6 || (strncmp(input, "father(", 7) != 0 && strncmp(input, "mother(", 7) != 0) || strchr(input, ')') == NULL || strchr(input, ',') == NULL || strchr(input, '(') == NULL) {
 		printf("invalid relationship, try again\n");
 		goto cleanup;
 	}
